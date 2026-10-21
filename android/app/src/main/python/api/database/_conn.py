@@ -1,0 +1,261 @@
+"""DB-anslutning via SQLAlchemy Core (DB-oberoende brygga mot Postgres-bytet).
+
+`get_conn()` ger en tunn shim ovanpå en SQLAlchemy-Connection som beter sig som den
+gamla `sqlite3`-anslutningen: `execute(sql, params)` med BÅDE qmark (`?`-tupler) och
+namngivna (`:name`-dictar) placeholders via `exec_driver_sql` (pysqlite native paramstyle),
+rader som indexeras med både `r[0]` och `r["kol"]`, `.lastrowid`/`.rowcount`, `commit()`/
+`close()`. Rå SQL körs alltså oförändrad genom shimmen modul för modul tills den
+Core-ifieras. URL ur env `DATABASE_URL` (default lokal sqlite-fil)."""
+
+import functools
+import os
+import time
+
+from sqlalchemy import URL, create_engine, event
+from sqlalchemy.pool import NullPool
+
+from ..config import DB_PATH
+
+DATABASE_URL = os.getenv("DATABASE_URL") or URL.create("sqlite", database=str(DB_PATH))
+
+_engine = None
+
+
+def get_engine():
+    global _engine
+    if _engine is None:
+        url = DATABASE_URL
+        is_sqlite = str(url).startswith("sqlite")
+        kwargs = {}
+        if is_sqlite:
+            # NullPool = ny connection per get_conn(), stängs vid close() - exakt som gamla
+            # sqlite3-mönstret (ingen delad pool-connection över trådar, ingen pool-svält i crawl).
+            kwargs["connect_args"] = {"check_same_thread": False}
+            kwargs["poolclass"] = NullPool
+        else:
+            # PG: QueuePool tilltaget för crawlen (upp till ~12 samtidiga upserts + API-läsningar).
+            kwargs["pool_size"] = 20
+            kwargs["max_overflow"] = 10
+            kwargs["pool_pre_ping"] = True
+        _engine = create_engine(url, **kwargs)
+        if is_sqlite:
+
+            @event.listens_for(_engine, "connect")
+            def _set_pragma(dbapi_conn, _rec):  # noqa: ANN001
+                cur = dbapi_conn.cursor()
+                cur.execute("PRAGMA busy_timeout=3000")  # vänta i st.f. att fela vid samtidig skrivning
+                cur.close()
+
+    return _engine
+
+
+class _Row:
+    """Rad som stödjer både r[0] (positionell), r["kol"] (nyckel) och dict(r)."""
+
+    __slots__ = ("_r",)
+
+    def __init__(self, row):
+        self._r = row
+
+    def __getitem__(self, k):
+        if isinstance(k, (int, slice)):
+            return self._r[k]
+        return self._r._mapping[k]
+
+    def __contains__(self, k):
+        return k in self._r._mapping
+
+    def keys(self):
+        return list(self._r._mapping.keys())
+
+    def __iter__(self):
+        return iter(self._r)  # sqlite3.Row-semantik: iterera över värden
+
+    def __len__(self):
+        return len(self._r)
+
+
+class _Result:
+    __slots__ = ("_res",)
+
+    def __init__(self, res):
+        self._res = res
+
+    def fetchone(self):
+        row = self._res.fetchone()
+        return _Row(row) if row is not None else None
+
+    def fetchall(self):
+        return [_Row(r) for r in self._res.fetchall()]
+
+    def fetchmany(self, size=None):
+        rows = self._res.fetchmany() if size is None else self._res.fetchmany(size)
+        return [_Row(r) for r in rows]
+
+    def __iter__(self):
+        for r in self._res:
+            yield _Row(r)
+
+    @property
+    def lastrowid(self):
+        return self._res.lastrowid
+
+    @property
+    def rowcount(self):
+        return self._res.rowcount
+
+
+class _NoResult:
+    """Tom resultat-stand-in för no-op executemany (tom sekvens)."""
+
+    lastrowid = None
+    rowcount = 0
+
+    def fetchone(self):
+        return None
+
+    def fetchall(self):
+        return []
+
+    def fetchmany(self, size=None):
+        return []
+
+    def __iter__(self):
+        return iter(())
+
+
+class _Conn:
+    """sqlite3-liknande connection-shim ovanpå en SQLAlchemy-Connection."""
+
+    __slots__ = ("_c",)
+
+    def __init__(self, conn):
+        self._c = conn
+
+    def execute(self, sql, params=None):
+        # Konverterade moduler skickar text()/Core-uttryck (named params -> dialekt-portabelt).
+        if not isinstance(sql, str):
+            return _Result(self._c.execute(sql, params or {}))
+        # Transitionell väg: rå SQL-sträng körs oförändrad via pysqlite native paramstyle.
+        if params is None:
+            return _Result(self._c.exec_driver_sql(sql))
+        # list-params (t.ex. IN (...)-koder) = EN qmark-uppsättning, inte executemany.
+        # exec_driver_sql tolkar topp-nivå-list som multiparams -> coerce till tuple.
+        if isinstance(params, list):
+            params = tuple(params)
+        return _Result(self._c.exec_driver_sql(sql, params))
+
+    def executemany(self, sql, seq):
+        seq = list(seq)
+        if not seq:
+            return _NoResult()
+        if not isinstance(sql, str):
+            return _Result(self._c.execute(sql, seq))
+        return _Result(self._c.exec_driver_sql(sql, seq))
+
+    def commit(self):
+        self._c.commit()
+
+    def rollback(self):
+        self._c.rollback()
+
+    def close(self):
+        self._c.close()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        self.close()
+
+
+def get_conn():
+    return _Conn(get_engine().connect())
+
+
+def dialect_name():
+    return get_engine().dialect.name
+
+
+# --- Dialekt-portabla JSON-fragment (data lagras som JSON-i-TEXT, ej jsonb-migrerat) ---
+# `col`/`key` är alltid kod-literaler (aldrig användarinput) -> säkra att interpolera.
+def json_get(col, key):
+    """SQL-fragment: JSON-skalär (text) ur en TEXT/JSON-kolumn."""
+    if dialect_name() == "postgresql":
+        return f"({col}::jsonb ->> '{key}')"
+    return f"json_extract({col}, '$.{key}')"
+
+
+def json_array_len(col, key):
+    """SQL-fragment: längd på en JSON-array under `key` (0 om saknas hanteras av anropare)."""
+    if dialect_name() == "postgresql":
+        return f"jsonb_array_length(({col}::jsonb) -> '{key}')"
+    return f"json_array_length(json_extract({col}, '$.{key}'))"
+
+
+def json_is_true(col, key):
+    """SQL-fragment: booleskt villkor att JSON-fältet under `key` är true."""
+    if dialect_name() == "postgresql":
+        return f"({col}::jsonb ->> '{key}') = 'true'"
+    return f"json_extract({col}, '$.{key}') = 1"
+
+
+def json_each_from(col):
+    """FROM-fragment som radifierar en JSON-array-kolumn till rader med kolumnen `value`.
+    Används i en cross join: `FROM tbl, {json_each_from('tbl.col')} WHERE ...`. Anroparen
+    måste filtrera bort icke-array-värden ('' / NULL) i WHERE (PG-casten tål inte tomt)."""
+    if dialect_name() == "postgresql":
+        return f"jsonb_array_elements_text({col}::jsonb) AS je(value)"
+    return f"json_each({col}) je"
+
+
+# --- Versionerad stats-memo (dyra argumentlösa aggregat) ---
+# De tunga konsol-stats:en (ean_stats UNION-distinct ~3s, catalog_stats, partial_info_counts
+# json-scan) ändras bara när data skrivs - inte mellan laddningar. En enda version-räknare
+# bumpas vid varje skrivning som påverkar dem (crawl/sweep/sync-slut + info-skrivningar ->
+# invalidate_stats()); funktioner memoiseras på (version, ts). TTL-backstop fångar konsument-
+# driven drift (product_info/images växer av bläddring), missade hooks och omstart. Lat
+# omräkning (invalidate bumpar bara versionen; nästa anrop räknar om).
+_STATS_VER = 0
+_STATS_TTL = 600.0  # sekunder; backstop om en invalidate-hook missas
+_STATS_MEMO = {}
+
+
+def invalidate_stats():
+    """Bumpa stats-versionen -> nästa anrop av en @stats_memo-funktion räknar om (lat)."""
+    global _STATS_VER
+    _STATS_VER += 1
+
+
+def stats_version():
+    """Aktuell stats-version (för cacher utanför datalagret, t.ex. overview-bundlen)."""
+    return _STATS_VER
+
+
+def stats_memo(fn):
+    """Memoisera ett argumentlöst, dyrt stats-aggregat tills invalidate_stats() bumpar
+    versionen eller TTL löper ut. GIL gör recompute-racet ofarligt (idempotent)."""
+
+    @functools.wraps(fn)
+    def wrapper():
+        now = time.monotonic()
+        c = _STATS_MEMO.get(fn.__name__)
+        if c is not None and c["ver"] == _STATS_VER and now - c["ts"] < _STATS_TTL:
+            return c["val"]
+        val = fn()
+        _STATS_MEMO[fn.__name__] = {"val": val, "ver": _STATS_VER, "ts": now}
+        return val
+
+    return wrapper
+
+
+def _ensure_column(conn, table, col, coltype):
+    cols = {r[1] for r in conn.execute(f"PRAGMA table_info({table})")}
+    if col not in cols:
+        conn.execute(f"ALTER TABLE {table} ADD COLUMN {col} {coltype}")
+
+
+def _now():
+    from datetime import datetime, timezone
+
+    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
