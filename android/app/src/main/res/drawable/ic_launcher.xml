@@ -1,0 +1,41 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+    <path android:fillColor="#7D35F4" android:pathData="M0,0h48v48h-48z" />
+
+    <!-- Loud confetti backdrop -->
+    <path android:fillColor="#FF4E79" android:pathData="M0,0h14l-14,15z" />
+    <path android:fillColor="#00E5D4" android:pathData="M48,0v14L35,0z" />
+    <path android:fillColor="#FFB928" android:pathData="M0,37l10,11h-10z" />
+    <path android:fillColor="#B9FF38" android:pathData="M48,34v14h-13z" />
+    <path android:fillColor="#FFFFFF" android:pathData="M7,12l1.1,2.4 2.6,0.3 -1.9,1.7 0.5,2.6 -2.3,-1.3 -2.3,1.3 0.5,-2.6 -1.9,-1.7 2.6,-0.3z" />
+    <path android:fillColor="#FFEA36" android:pathData="M40,8l0.8,1.8 2,0.2 -1.5,1.3 0.4,2 -1.7,-1 -1.7,1 0.4,-2 -1.5,-1.3 2,-0.2z" />
+    <path android:fillColor="#FFB928" android:pathData="M6,31m-1.5,0a1.5,1.5 0,1 1,3 0a1.5,1.5 0,1 1,-3 0" />
+    <path android:fillColor="#00E5D4" android:pathData="M42,27m-1.4,0a1.4,1.4 0,1 1,2.8 0a1.4,1.4 0,1 1,-2.8 0" />
+
+    <!-- Grocery bag handle -->
+    <path android:fillColor="#00000000" android:strokeColor="#24113F" android:strokeWidth="4.2" android:strokeLineCap="round" android:pathData="M15,20c0,-8 3.2,-12 9,-12s9,4 9,12" />
+    <path android:fillColor="#00000000" android:strokeColor="#B9FF38" android:strokeWidth="2.2" android:strokeLineCap="round" android:pathData="M15,20c0,-8 3.2,-12 9,-12s9,4 9,12" />
+
+    <!-- Bright shopping bag -->
+    <path android:fillColor="#FFEA36" android:strokeColor="#24113F" android:strokeWidth="2.2" android:strokeLineJoin="round" android:pathData="M9,17h30l-2.5,26h-25z" />
+    <path android:fillColor="#FF4E79" android:pathData="M25,18h13l-2.3,23h-10.7z" />
+    <path android:fillColor="#00D5C4" android:pathData="M11,25h14v15h-12z" />
+
+    <!-- Playful groceries poking out of the bag -->
+    <path android:fillColor="#FF4E79" android:strokeColor="#24113F" android:strokeWidth="1.5" android:pathData="M14,17c-1.2,-4.8 1.4,-8.7 5.2,-8.7 1.6,0 2.4,0.8 3.7,1.8 1.2,-1 2.2,-1.7 3.7,-1.5 3.6,0.5 4.7,4.4 3.4,8.4 -1,3.2 -3.4,5.2 -8.1,5.2 -4.1,0 -6.8,-2 -7.9,-5.2z" />
+    <path android:fillColor="#B9FF38" android:strokeColor="#24113F" android:strokeWidth="0.8" android:pathData="M20,9c0.2,-2.5 1.6,-3.5 3.4,-3.8 -0.2,2.1 -1.3,3.3 -3.4,3.8z" />
+    <path android:fillColor="#00E5D4" android:strokeColor="#24113F" android:strokeWidth="1.5" android:strokeLineJoin="round" android:pathData="M29,9h7l2,3v7h-10v-7z" />
+    <path android:fillColor="#FFFFFF" android:pathData="M29,12h8v2h-8z" />
+
+    <!-- Silly happy face -->
+    <path android:fillColor="#FFFFFF" android:pathData="M17,27m-2.1,0a2.1,2.1 0,1 1,4.2 0a2.1,2.1 0,1 1,-4.2 0" />
+    <path android:fillColor="#24113F" android:pathData="M17.6,27m-0.9,0a0.9,0.9 0,1 1,1.8 0a0.9,0.9 0,1 1,-1.8 0" />
+    <path android:fillColor="#FFFFFF" android:pathData="M29,27m-2.1,0a2.1,2.1 0,1 1,4.2 0a2.1,2.1 0,1 1,-4.2 0" />
+    <path android:fillColor="#24113F" android:pathData="M29.6,27m-0.9,0a0.9,0.9 0,1 1,1.8 0a0.9,0.9 0,1 1,-1.8 0" />
+    <path android:fillColor="#00000000" android:strokeColor="#24113F" android:strokeWidth="1.8" android:strokeLineCap="round" android:pathData="M20,33c2.5,3.4 6.5,3.4 9,0" />
+    <path android:fillColor="#FF4E79" android:pathData="M9,20l-2,2.3 2.5,1z" />
+    <path android:fillColor="#B9FF38" android:pathData="M38,20l2,2.3 -2.5,1z" />
+</vector>
