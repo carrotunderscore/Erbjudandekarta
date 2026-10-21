@@ -1,0 +1,46 @@
+plugins {
+    id 'com.android.application'
+    id 'com.chaquo.python'
+}
+
+android {
+    namespace 'se.erbjudandekartan.app'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId 'se.erbjudandekartan.app'
+        minSdk 26
+        targetSdk 35
+        versionCode 1
+        versionName '1.0'
+        ndk {
+            abiFilters 'arm64-v8a', 'x86_64'
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+chaquopy {
+    defaultConfig {
+        version = '3.12'
+        pip {
+            install 'fastapi==0.115.12'
+            install 'pydantic==1.10.26'
+            install 'uvicorn==0.34.3'
+            install 'sqlalchemy==2.0.41'
+            install 'httpx==0.28.1'
+            install 'python-dotenv==1.1.1'
+            install 'croniter==6.0.0'
+            install 'tzdata==2025.2'
+            install 'bcrypt==3.2.2'
+            install 'itsdangerous==2.2.0'
+            install 'Babel==2.17.0'
+            install 'phonenumbers==9.0.9'
+            install 'holidays==0.76'
+        }
+    }
+}
