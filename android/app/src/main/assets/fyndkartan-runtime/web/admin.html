@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>API-konsol - Fyndkartan</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body { background: #f4f6f8; }
+    .app-header { background: #14181f; color: #f4f6f8; }
+    .brand { font-weight: 800; letter-spacing: -.03em; }
+    .brand span { color: #19c37d; }
+    code { color: #0b6b3a; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .8rem; }
+    .stat { font-size: 1.6rem; font-weight: 800; }
+    /* Stat-kort som CSS-grid: grid-auto-rows:1fr gör ALLA kort exakt lika höga (hela rutnätet,
+       inte bara per rad), höjden anpassas dynamiskt till det högsta kortet. Ren CSS, ingen JS.
+       Bootstrap-kolumnerna neutraliseras (grid sköter bredd/gutter). */
+    .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); grid-auto-rows: 1fr; gap: 1rem; }
+    .stats-row > [class*="col"] { width: auto; max-width: none; flex: none; padding: 0; }
+    .stats-row > [class*="col"] > .card { height: 100%; }
+    @media (max-width: 767.98px) { .stats-row { grid-template-columns: repeat(2, 1fr); } }
+    table { font-size: .85rem; }
+    .st-ok { color: #137a4d; } .st-error { color: #c0392b; } .st-running { color: #b8860b; }
+    .badge-chain { color: #fff; font-weight: 700; }
+    .call-err { color: #c0392b; font-weight: 700; }
+    .attn { background: #fff7e6; }
+    .toggles { max-width: 540px; }
+    .tchip { display: inline-block; font-size: .66rem; padding: 1px 7px; margin: 1px; border-radius: 11px;
+             background: #eef1f4; color: #8b95a4; cursor: pointer; user-select: none; }
+    .tchip.on { background: #19c37d; color: #04231a; font-weight: 700; }
+    .typechip { display: inline-block; font-size: .72rem; padding: 2px 8px; border-radius: 12px;
+                background: #14181f; color: #fff; }
+    .typechip.bi { background: #d6dbe0; color: #46505c; }
+    .type-del { margin-left: 5px; cursor: pointer; opacity: .7; font-weight: 700; }
+    .type-del:hover { opacity: 1; }
+    .overlay { position: fixed; inset: 0; z-index: 2000; display: flex; align-items: center; justify-content: center; }
+    #loginGate { background: #f4f6f8; }
+    #settingsModal { background: rgba(0,0,0,.4); }
+    .gate-card { width: 330px; max-width: 92vw; }
+    .acct { position: relative; }
+    .acct-btn { background: none; border: 1px solid rgba(255,255,255,.25); color: #f4f6f8;
+      font-size: .85rem; padding: .25rem .6rem; border-radius: 6px; cursor: pointer;
+      display: flex; align-items: center; gap: .35rem; }
+    .acct-caret { font-size: .7rem; opacity: .8; }
+    .acct-email { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 180px; }
+    .acct-menu { position: absolute; right: 0; top: calc(100% + 6px); min-width: 190px; z-index: 1500;
+      background: #fff; border: 1px solid #e3e7ec; border-radius: 8px; box-shadow: 0 8px 28px rgba(0,0,0,.18);
+      padding: 4px; display: flex; flex-direction: column; }
+    .acct-item { background: none; border: none; text-align: left; font-size: .85rem; color: #1c2530;
+      padding: .45rem .6rem; border-radius: 6px; cursor: pointer; }
+    .acct-item:hover { background: #eef1f4; }
+    .marq-list { max-height: 62vh; overflow: auto; display: flex; flex-direction: column; gap: 2px; }
+    .marq-row { padding: .4rem .5rem; border-radius: 6px; cursor: pointer; border: 1px solid transparent; }
+    .marq-row:hover { background: #eef1f4; }
+    .marq-row.sel { background: #e7f7ef; border-color: #19c37d; }
+    .mq-cand { padding: .3rem .4rem; border-radius: 6px; cursor: pointer; }
+    .mq-cand:hover { background: #f4f6f8; }
+    .mq-group { padding: .4rem 0; border-top: 1px solid #eef1f4; }
+    .mq-group:first-of-type { border-top: none; }
+    .mq-thumb { width: 34px; height: 34px; flex: 0 0 34px; object-fit: contain; background: #f2f5f7; border-radius: 5px; }
+    .mq-thumb-lg { width: 64px; height: 64px; flex: 0 0 64px; object-fit: contain; background: #f2f5f7; border-radius: 7px; }
+    .api-ep { border: 1px solid #e6e9ec; border-radius: 7px; padding: .4rem .6rem; margin-bottom: .4rem; }
+    .api-ep > summary { display: flex; align-items: center; gap: .5rem; cursor: pointer; list-style: revert; flex-wrap: wrap; }
+    .api-ep[open] { background: #fbfcfd; }
+    .api-ep .ep-h { font-weight: 600; font-size: .72rem; text-transform: uppercase; color: #6b7480; margin: .5rem 0 .15rem; }
+    .api-ep table td { padding: 2px 6px 2px 0; }
+    #apiOut .j-meta { color: #8b949e; }
+    #apiOut .j-key { color: #79c0ff; }
+    #apiOut .j-str { color: #a5d6a7; }
+    #apiOut .j-num { color: #f0a868; }
+    #apiOut .j-bool { color: #d2a8ff; }
+    #apiOut .j-null { color: #8b949e; font-style: italic; }
+    #apiOut .j-punc { color: #8b949e; }
+    #apiOut .j-meta { display: block; margin-bottom: .4rem; }
+    #apiOut .jt { }
+    #apiOut .jt > summary { cursor: pointer; list-style: revert; white-space: nowrap; }
+    #apiOut .jt-kids { padding-left: 1.1em; border-left: 1px solid #2a3038; margin-left: .1em; }
+    #apiOut .jt-leaf { white-space: pre-wrap; }
+    #apiOut .jt-n { color: #6b7480; font-size: .85em; margin: 0 .4em; }
+    #apiOut .jt-text { white-space: pre-wrap; }
+    img.lb { cursor: zoom-in; }
+    .lb-overlay { position: fixed; inset: 0; z-index: 3000; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,.85); cursor: zoom-out; }
+    .lb-overlay[hidden] { display: none; }
+    .lb-img { max-width: 92vw; max-height: 92vh; object-fit: contain; border-radius: 8px; background: #fff; }
+    /* Live crawl-feed: kontinuerligt nedåtflöde via transform-scroll på inner-wrappern (admin.js):
+       ny rad läggs in i full höjd, listan hoppar upp en rad och animerar ner -> allt glider nedåt
+       mjukt utan layout-reflow. Raderna tonar ut under gradient-masken i nederkanten; understa tas
+       bort tyst. Fast höjd + overflow:hidden så nederkanten står still. */
+    #catalogFeed { height: 432px; overflow: hidden;
+      -webkit-mask-image: linear-gradient(to bottom, #000 68%, transparent 100%);
+      mask-image: linear-gradient(to bottom, #000 68%, transparent 100%); }
+    .feed-item { display: flex; align-items: center; gap: .5rem; font-size: .8rem;
+      padding: .28rem .25rem; border-bottom: 1px solid #eef1f4; }
+  </style>
+</head>
+<body>
+  <header class="app-header d-flex align-items-center px-3 py-2 gap-3">
+    <div class="brand fs-5">API-<span>konsol</span></div>
+    <span class="small text-secondary d-none d-md-inline">Fyndkartan &middot; drift &amp; data</span>
+    <div class="ms-auto d-flex align-items-center gap-2">
+      <a href="/" class="btn btn-sm btn-outline-light">&#8599; Till kartan</a>
+      <span id="consoleAuth" class="d-flex align-items-center gap-2"></span>
+    </div>
+  </header>
+
+  <!-- Inloggning (egen admin-auth, skild från app-konton) -->
+  <div id="loginGate" class="overlay d-none">
+    <div class="card p-4 gate-card">
+      <h5 class="mb-1">API-konsol</h5>
+      <p class="text-muted small mb-3">Logga in med ett admin-konto.</p>
+      <input id="cEmail" type="email" class="form-control form-control-sm mb-2" placeholder="E-post" autocomplete="username">
+      <input id="cPass" type="password" class="form-control form-control-sm mb-2" placeholder="Lösenord" autocomplete="current-password">
+      <div id="cErr" class="text-danger small mb-2 d-none"></div>
+      <button id="cLogin" class="btn btn-dark btn-sm w-100">Logga in</button>
+    </div>
+  </div>
+
+  <!-- Kontoinställningar -->
+  <div id="settingsModal" class="overlay d-none">
+    <div class="card p-4 gate-card">
+      <div class="d-flex align-items-center mb-2">
+        <h6 class="mb-0">Kontoinställningar</h6>
+        <button id="setClose" class="btn-close ms-auto" aria-label="Stäng"></button>
+      </div>
+      <div class="small text-muted mb-3">Inloggad som <span id="setEmail" class="fw-semibold"></span></div>
+      <div class="text-uppercase text-muted fw-semibold mb-2" style="font-size:.72rem">Byt lösenord</div>
+      <input id="setCur" type="password" class="form-control form-control-sm mb-2" placeholder="Nuvarande lösenord" autocomplete="current-password">
+      <input id="setNew" type="password" class="form-control form-control-sm mb-2" placeholder="Nytt lösenord (minst 8 tecken)" autocomplete="new-password">
+      <div id="setMsg" class="small mb-2 d-none"></div>
+      <button id="setSave" class="btn btn-dark btn-sm w-100">Spara lösenord</button>
+    </div>
+  </div>
+
+  <div id="console" class="container-fluid p-3 d-none">
+    <ul class="nav nav-tabs mb-3" id="tabs">
+      <li class="nav-item"><button class="nav-link active" data-tab="overview">Översikt</button></li>
+      <li class="nav-item"><button class="nav-link" data-tab="kedjor">Kedjor</button></li>
+      <li class="nav-item"><button class="nav-link" data-tab="sweep">Erbjudanden</button></li>
+      <li class="nav-item"><button class="nav-link" data-tab="calls">API-anrop</button></li>
+      <li class="nav-item"><button class="nav-link" data-tab="sources">Datakällor</button></li>
+      <li class="nav-item"><button class="nav-link" data-tab="tags">Taggar</button></li>
+      <li class="nav-item"><button class="nav-link" data-tab="cats">Kategorier</button></li>
+      <li class="nav-item"><button class="nav-link" data-tab="manuf">Tillverkare</button></li>
+      <li class="nav-item"><button class="nav-link" data-tab="catalog">Sortiment</button></li>
+      <li class="nav-item"><button class="nav-link" data-tab="marques">Märkesvaror</button></li>
+      <li class="nav-item"><button class="nav-link" data-tab="keys">API-nycklar</button></li>
+      <li class="nav-item"><button class="nav-link" data-tab="settings">Inställningar</button></li>
+    </ul>
+
+    <section id="overview" class="tab"></section>
+    <section id="kedjor" class="tab d-none"></section>
+    <section id="sweep" class="tab d-none"></section>
+    <section id="calls" class="tab d-none"></section>
+    <section id="sources" class="tab d-none"></section>
+    <section id="tags" class="tab d-none"></section>
+    <section id="cats" class="tab d-none"></section>
+    <section id="manuf" class="tab d-none"></section>
+    <section id="catalog" class="tab d-none"></section>
+    <section id="marques" class="tab d-none"></section>
+    <section id="keys" class="tab d-none"></section>
+    <section id="settings" class="tab d-none"></section>
+  </div>
+
+  <script src="/static/admin.js"></script>
+</body>
+</html>

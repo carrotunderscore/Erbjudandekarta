@@ -1,0 +1,528 @@
+:root {
+  --hdr: #14181f;
+  --hdr-line: #2a313c;
+  --accent: #19c37d;
+  --sidebar-w: 340px;
+}
+
+* { box-sizing: border-box; }
+
+.auth-modal {
+  position: fixed; inset: 0; z-index: 3000;
+  background: rgba(0, 0, 0, .45);
+  display: flex; align-items: center; justify-content: center;
+}
+.auth-card {
+  background: #fff; border-radius: 12px; padding: 1.2rem;
+  width: 330px; max-width: 92vw;
+  box-shadow: 0 10px 44px rgba(0, 0, 0, .35);
+}
+
+/* Favorit-UI kräver inloggning */
+body:not(.logged-in) .fav-only,
+body:not(.logged-in) .s-fav,
+body:not(.logged-in) .pop-fav { display: none !important; }
+
+/* Kontomeny (utfällbar) */
+.acct { position: relative; }
+.acct-btn {
+  background: none; border: 1px solid rgba(255, 255, 255, .25); color: #f4f6f8;
+  font-size: .85rem; padding: .25rem .6rem; border-radius: 6px; cursor: pointer;
+  display: flex; align-items: center; gap: .35rem; max-width: 60vw;
+}
+.acct-btn:hover { background: rgba(255, 255, 255, .1); }
+.acct-email { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 180px; }
+.acct-caret { font-size: .7rem; opacity: .8; flex: 0 0 auto; }
+.acct-menu {
+  position: absolute; right: 0; top: calc(100% + 6px); min-width: 190px; z-index: 1500;
+  background: #fff; border: 1px solid #e3e7ec; border-radius: 8px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, .18); padding: 4px;
+  display: flex; flex-direction: column;
+}
+.acct-item {
+  background: none; border: none; text-align: left; font-size: .85rem; color: #1c2530;
+  padding: .45rem .6rem; border-radius: 6px; cursor: pointer;
+}
+.acct-item:hover { background: #eef1f4; }
+html, body { height: 100%; margin: 0; }
+body {
+  font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.app-header {
+  height: 56px;
+  background: var(--hdr);
+  color: #f4f6f8;
+  border-bottom: 1px solid var(--hdr-line);
+  flex: 0 0 auto;
+}
+.nav-toggle {
+  display: none;
+  background: none; border: none; color: #f4f6f8;
+  font-size: 1.35rem; line-height: 1; cursor: pointer; padding: 0 .15rem;
+}
+.brand {
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  font-size: 1.25rem;
+}
+.brand span { color: var(--accent); }
+.header-sub { color: #8b95a4; font-size: .82rem; }
+
+.sync-badge {
+  font-size: .78rem;
+  color: #9aa4b2;
+  white-space: nowrap;
+}
+.sync-badge.ok { color: var(--accent); }
+.sync-badge.running { color: #ffc857; }
+.sync-badge.error { color: #ff6b6b; }
+
+.app-body { flex: 1 1 auto; display: flex; min-height: 0; position: relative; }
+
+.sidebar {
+  width: var(--sidebar-w);
+  flex: 0 0 var(--sidebar-w);
+  border-right: 1px solid #e3e7ec;
+  display: flex;
+  flex-direction: column;
+  background: #fbfcfd;
+  min-height: 0;
+  position: relative;
+}
+
+#map { flex: 1 1 auto; min-width: 0; background: #aadaff; }
+
+.chain-row {
+  display: flex;
+  align-items: center;
+  gap: .55rem;
+  padding: .28rem .4rem;
+  border-radius: 7px;
+  cursor: pointer;
+  user-select: none;
+}
+.chain-row:hover { background: #eef1f4; }
+.chain-row input { margin: 0; }
+.dot {
+  width: 12px; height: 12px; border-radius: 50%;
+  flex: 0 0 12px;
+  box-shadow: 0 0 0 2px rgba(0,0,0,.06);
+}
+.chain-row .name { font-weight: 600; font-size: .9rem; }
+.chain-row .cnt { margin-left: auto; font-size: .78rem; color: #8b95a4; }
+.chain-row.off { opacity: .45; }
+
+.store-list { display: flex; flex-direction: column; gap: 2px; }
+.store-item {
+  padding: .4rem .5rem;
+  border-radius: 7px;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+.store-item:hover { background: #eef1f4; }
+.store-item .s-top { display: flex; align-items: center; gap: .4rem; }
+.store-item .s-name { font-weight: 600; color: #1c2530; font-size: .86rem; min-width: 0; }
+.store-item .s-chip {
+  flex: 0 0 auto;
+  font-size: .58rem; font-weight: 700; color: #fff;
+  text-transform: uppercase; letter-spacing: .02em;
+  padding: 1px 6px; border-radius: 20px; white-space: nowrap;
+}
+.store-item .s-meta { font-size: .76rem; color: #8b95a4; }
+.store-item {
+  display: flex; align-items: center; gap: .4rem;
+}
+.store-item .s-body { flex: 1; min-width: 0; }
+.s-fav {
+  flex: 0 0 auto;
+  background: none; border: none; cursor: pointer;
+  font-size: 1.1rem; line-height: 1; color: #cfd6dd; padding: .1rem .2rem;
+}
+.s-fav.on { color: #ffc107; }
+.s-fav:hover { color: #ffc107; }
+.xsmall { font-size: .7rem; }
+
+/* Leaflet-popup */
+.store-pop { min-width: 200px; position: relative; }
+.pop-fav {
+  position: absolute; top: -2px; right: 16px;
+  background: none; border: none; cursor: pointer;
+  font-size: 1.15rem; line-height: 1; color: #cfd6dd; padding: 2px; z-index: 1;
+}
+.pop-fav.on, .pop-fav:hover { color: #ffc107; }
+.store-pop h6 { margin: 0 0 .2rem; font-weight: 700; }
+.store-pop .pop-offer { background: #fdecea; border: 1px solid #f4c7c0; color: #8a2a1c;
+  border-radius: 6px; padding: 3px 7px; margin: .25rem 0; font-size: .74rem; }
+.store-pop .pop-offer strong { color: #c0392b; }
+.store-pop .pop-brand {
+  display: inline-block; font-size: .66rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .03em;
+  color: #fff; padding: 1px 7px; border-radius: 20px; margin-bottom: .4rem;
+}
+.store-pop .pop-addr { font-size: .82rem; color: #444; }
+.store-pop .pop-hours { font-size: .8rem; color: #1c7d4d; font-weight: 600; margin-top: .2rem; }
+.store-pop .pop-week { margin-top: .3rem; font-size: .78rem; }
+.store-pop .pop-week > summary { cursor: pointer; color: #1c7d4d; font-weight: 600; list-style: revert; }
+.store-pop .wk-table { width: 100%; border-collapse: collapse; margin-top: .25rem; }
+.store-pop .wk-table td { padding: 1px 6px 1px 0; color: #444; vertical-align: top; }
+.store-pop .wk-table td:nth-child(2) { width: 100%; }   /* mittenkolumnen tar slacken */
+.store-pop .wk-table .wk-hrs { text-align: right; white-space: nowrap; padding-right: 0; }
+.store-pop .wk-table .wk-today { font-weight: 700; color: #111; }
+.store-pop .wk-exc-h td { font-weight: 600; color: #555; padding-top: .3rem; border-top: 1px solid #eee; }
+.store-pop .wk-exc td { color: #666; }
+.store-pop .pop-tags { margin-top: .4rem; display: flex; flex-wrap: wrap; gap: 3px; }
+.store-pop .tag {
+  font-size: .66rem; background: #eef1f4; color: #46505c;
+  padding: 1px 6px; border-radius: 4px;
+}
+.store-pop .pop-links { margin-top: .55rem; display: flex; gap: .35rem; }
+.store-pop .pop-links a {
+  font-size: .76rem; text-decoration: none; padding: .25rem .55rem;
+  border-radius: 6px; font-weight: 600;
+}
+.pop-links .btn-offers { background: var(--accent); color: #04231a; }
+.pop-links .btn-store { background: #eef1f4; color: #1c2530; }
+
+.marker-pin {
+  width: 16px; height: 16px; border-radius: 50%;
+  border: 2.5px solid #fff;
+  box-shadow: 0 1px 4px rgba(0,0,0,.4);
+}
+/* Pris-chip på markören vid produktfilter (iconSize 0 -> centreras via transform) */
+.marker-price {
+  display: inline-block; transform: translate(-50%, -50%);
+  color: #fff; font-weight: 700; font-size: .72rem; line-height: 1.1;
+  padding: 3px 7px; border-radius: 11px; white-space: nowrap; text-align: center;
+  border: 2px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,.4);
+}
+.marker-price .mp-deal {
+  display: block; font-size: .6rem; font-weight: 600; opacity: .9; margin-top: 1px;
+}
+
+.pop-offers-btn {
+  margin-top: .55rem;
+  width: 100%;
+  border: none;
+  background: #14181f;
+  color: #fff;
+  font-size: .78rem;
+  font-weight: 600;
+  padding: .4rem;
+  border-radius: 7px;
+  cursor: pointer;
+}
+.pop-offers-btn:hover { background: #2a313c; }
+
+/* Erbjudande-panel (lägger sig över butikslistan i sidopanelen) */
+.offers-panel {
+  position: absolute;
+  inset: 0;                   /* täcker hela sidopanelen */
+  background: #fbfcfd;
+  display: flex;
+  flex-direction: column;
+  padding: .6rem .7rem;
+  z-index: 500;
+}
+.offers-head { display: flex; align-items: baseline; gap: .6rem; margin-bottom: .5rem; }
+.offers-title { font-weight: 700; font-size: .9rem; color: #1c2530; }
+.offers-list { overflow: auto; display: flex; flex-direction: column; gap: 6px; }
+
+.offer-card {
+  display: flex;
+  gap: .55rem;
+  background: #fff;
+  border: 1px solid #e8ecf0;
+  border-radius: 9px;
+  padding: .45rem;
+}
+.o-img { width: 56px; height: 56px; flex: 0 0 56px; object-fit: contain; border-radius: 6px; background: #f2f5f7; }
+.o-img--ph { background: #eef1f4; }
+img.o-img { cursor: zoom-in; }
+
+/* Lightbox: förstorad produktbild för granskning av förpackningen. */
+.lb-overlay { position: fixed; inset: 0; z-index: 3000; display: flex; align-items: center; justify-content: center; background: rgba(0, 0, 0, .85); cursor: zoom-out; }
+.lb-overlay[hidden] { display: none; }
+.lb-img { max-width: 92vw; max-height: 92vh; object-fit: contain; border-radius: 8px; background: #fff; }
+.o-body { min-width: 0; flex: 1; }
+.o-name { font-weight: 600; font-size: .82rem; color: #1c2530; line-height: 1.25;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.o-meta { font-size: .72rem; color: #8b95a4; }
+.o-price-row { display: flex; align-items: baseline; gap: .4rem; margin-top: .2rem; flex-wrap: wrap; }
+.o-price { font-weight: 800; font-size: .9rem; color: #e3000b; }
+/* Hyllpris (katalog) = neutralt, inte rött - rött reserveras för faktisk rea/erbjudande. */
+.o-price--shelf { color: #1c2530; }
+.o-cmp { font-size: .72rem; color: #46505c; }
+.o-member {
+  font-size: .62rem; font-weight: 700; text-transform: uppercase;
+  background: #ffd400; color: #1c2530; padding: 1px 5px; border-radius: 4px;
+}
+.o-save {
+  font-size: .66rem; font-weight: 700;
+  background: #e7f7ef; color: #137a4d; padding: 1px 6px; border-radius: 4px;
+}
+.o-deal {
+  font-size: .62rem; font-weight: 700; text-transform: uppercase;
+  padding: 1px 5px; border-radius: 4px;
+}
+.o-deal--mb { background: #e8ecfb; color: #2f43a8; }
+.o-deal--bw { background: #fbeede; color: #9a5a16; }
+.o-foot { font-size: .68rem; color: #9aa4b2; margin-top: .1rem; display: flex; align-items: center; gap: .35rem; flex-wrap: wrap; }
+.o-cat {
+  font-size: .64rem; font-weight: 600;
+  background: #eef1f5; color: #46505c; padding: 1px 7px; border-radius: 10px;
+}
+.o-valid { font-size: .68rem; color: #9aa4b2; }
+.o-chainchip { font-size: .6rem; font-weight: 700; color: #fff; padding: 1px 6px; border-radius: 10px; }
+.o-stores { font-size: .64rem; color: #6b7480; }
+.o-shelf-tag { font-size: .6rem; font-weight: 700; color: #6b7480; text-transform: uppercase; letter-spacing: .03em; }
+/* Per-kedje-priser som grid: ett gemensamt 5-kolumners rutnät -> priserna linjerar rad för rad. */
+.o-shelf { display: grid; grid-template-columns: max-content max-content max-content max-content auto;
+  gap: 2px .55rem; margin-top: .25rem; align-items: baseline; font-size: .72rem; color: #46505c; }
+.o-sc-chain { font-size: 0; }                 /* bara chippet syns; nollar radmellanrum */
+.o-sc-cmp { text-align: right; white-space: nowrap; }
+.o-sc-valid { white-space: nowrap; font-size: .68rem; }
+.o-shelf .o-chainchip { flex: 0 0 auto; }
+.o-offer { color: #c0392b; font-weight: 700; }
+.o-offer-link { color: inherit; cursor: pointer; text-decoration: underline dotted; text-underline-offset: 2px; }
+.o-offer-link:hover { text-decoration: underline; }
+.o-sc-deal { font-weight: 400; color: #8b95a4; font-size: .92em; }  /* liten deal-text efter styckpris */
+.o-sc-store { color: #b8860b; font-weight: 700; cursor: help; margin-left: 1px; }  /* butiksspecifikt hyllpris (Coop/ICA) */
+.o-sc-range { color: inherit; cursor: pointer; text-decoration: underline dotted; text-underline-offset: 2px; white-space: nowrap; }  /* per-butik-prisintervall (Steg 6) -> modal */
+.o-sc-range:hover { text-decoration: underline; }
+/* "Aktuellt erbjudande"-sektionen i produktmodalen */
+.od-head { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; color: #8b95a4; margin-bottom: .25rem; }
+.od-row { padding: .3rem .4rem; border-radius: 6px; margin-bottom: 3px; background: #f7f9fb; font-size: .82rem; }
+.od-row.od-hi { background: #fdecea; box-shadow: inset 2px 0 0 #c0392b; }
+.od-row .od-price { font-weight: 800; margin-left: .35rem; }
+.od-row .od-deal-txt { font-weight: 600; color: #46505c; }
+.od-row .od-sub { font-size: .7rem; margin-top: 1px; }
+.od-row .od-actions { margin-top: .35rem; }
+.od-map {
+  background: none; border: 1px solid #d4dae0; color: #46505c;
+  font-size: .68rem; font-weight: 600; padding: 2px 9px; border-radius: 20px; cursor: pointer;
+}
+.od-map:hover { background: #eef1f4; }
+/* Näringstabell i produktmodalen */
+.nut-table { width: 100%; border-collapse: collapse; }
+.nut-table th { font-weight: 700; color: #46505c; border-bottom: 1px solid #d4dae0; padding: 2px 4px; text-align: left; }
+.nut-table td { padding: 2px 4px; border-bottom: 1px solid #eef1f4; color: #1c2530; }
+.nut-table .nut-val { text-align: right; white-space: nowrap; }
+.o-offer-badge {
+  font-size: .6rem; font-weight: 700; color: #fff; background: #c0392b;
+  padding: 1px 7px; border-radius: 10px; text-transform: uppercase; letter-spacing: .02em;
+}
+.o-store { color: #46505c; font-weight: 600; }
+.fav-sec {
+  font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .03em;
+  color: #8b95a4; margin: .6rem .1rem .3rem; padding-bottom: .2rem; border-bottom: 1px solid #e8ecf0;
+}
+.fav-sec:first-child { margin-top: 0; }
+.o-info {
+  margin-top: .35rem; background: none; border: 1px solid #d4dae0; color: #46505c;
+  font-size: .68rem; font-weight: 600; padding: 1px 8px; border-radius: 20px; cursor: pointer;
+}
+.o-info:hover { background: #eef1f4; }
+.o-actions { display: flex; gap: .35rem; flex-wrap: wrap; margin-top: .35rem; }
+.o-actions .o-info { margin-top: 0; }
+.o-map {
+  background: none; border: 1px solid #d4dae0; color: #46505c;
+  font-size: .68rem; font-weight: 600; padding: 1px 8px; border-radius: 20px; cursor: pointer;
+}
+.o-map:hover { background: #eef1f4; }
+/* Lägg-i-kassen-knapp på produktkort */
+.o-basket {
+  background: none; border: 1px solid #d4dae0; color: #46505c;
+  font-size: .68rem; font-weight: 600; padding: 1px 8px; border-radius: 20px; cursor: pointer;
+}
+.o-basket:hover { background: #eef1f4; }
+.o-basket.in { background: #19c37d; border-color: #19c37d; color: #04231a; }
+.o-basket--off { color: #aeb6bf; border-color: #e6e9ec; cursor: help; }
+.o-basket--off:hover { background: none; }
+/* Matkasse-räknare i headern */
+.basket-count { display: inline-block; min-width: 1.1em; padding: 0 4px; border-radius: 10px;
+  background: #19c37d; color: #04231a; font-weight: 700; font-size: .72rem; text-align: center; }
+/* Matkasse-panel: hanterings-lista */
+.bk-row { display: grid; grid-template-columns: 34px 1fr auto; align-items: center; gap: .5rem;
+  padding: .35rem .25rem; border-bottom: 1px solid #eef1f4; }
+.bk-thumb { width: 34px; height: 34px; object-fit: contain; }
+.bk-name { font-size: .8rem; color: #1c2530; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bk-qty { display: flex; align-items: center; gap: .35rem; }
+.bk-qty button { width: 22px; height: 22px; border: 1px solid #d4dae0; background: #fff; border-radius: 5px;
+  cursor: pointer; font-weight: 700; line-height: 1; color: #46505c; }
+.bk-qty button:hover { background: #eef1f4; }
+.bk-rm { color: #b53a3a !important; }
+/* Matkasse-resultat: kandidater */
+.bk-cand { border: 1px solid #e6e9ec; border-radius: 8px; margin-bottom: .4rem; background: #fff; }
+.bk-cand > summary { display: flex; align-items: center; gap: .5rem; padding: .45rem .6rem; cursor: pointer;
+  font-size: .82rem; list-style: none; }
+.bk-cand > summary::-webkit-details-marker { display: none; }
+.bk-cand-name { flex: 1; min-width: 0; color: #1c2530; }
+.bk-cand-tot { font-weight: 800; color: #1c2530; white-space: nowrap; }
+.bk-cand.bk-best { border-color: #19c37d; box-shadow: inset 3px 0 0 #19c37d; }
+.bk-cand.bk-best .bk-cand-tot { color: #137a4d; }
+.bk-miss { font-size: .68rem; font-weight: 700; background: #fde7e7; color: #b53a3a; padding: 1px 6px; border-radius: 10px; }
+.bk-nat { font-size: .64rem; font-weight: 700; background: #eef1f4; color: #5a6573; padding: 1px 6px; border-radius: 10px; cursor: help; }
+.bk-cand-stores { margin-top: .35rem; padding-top: .35rem; border-top: 1px dashed #e6e9ec;
+  max-height: 240px; overflow-y: auto; }  /* långa kedje-butikslistor scrollar i kortet */
+.bk-cand-stores-h { font-size: .68rem; font-weight: 600; color: #8b95a4; margin-bottom: 2px; }
+.bk-store { font-size: .72rem; color: #46505c; padding: 2px 0; }
+.bk-jump { cursor: pointer; }
+.bk-store.bk-jump { display: flex; align-items: center; gap: .3rem; border-radius: 4px; padding: 2px 4px; }
+.bk-store.bk-jump:hover { background: #eef1f4; }
+.bk-jump-ic { margin-left: auto; opacity: .6; }
+.bk-mapbtn { margin-top: .4rem; background: none; border: 1px solid #d4dae0; color: #46505c;
+  font-size: .7rem; font-weight: 600; padding: 2px 9px; border-radius: 20px; cursor: pointer; }
+.bk-mapbtn:hover { background: #eef1f4; }
+/* Matkasse-panelens hanterings- och resultatvy fyller panelen + scrollar (många butiker i en stor zon) */
+#basketManage, #basketResults { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+#basketManage #basketList { flex: 1; min-height: 0; }
+#basketResultsBody { flex: 1; min-height: 0; overflow-y: auto; }
+.bk-lines { padding: .2rem .6rem .5rem; border-top: 1px solid #eef1f4; }
+.bk-line { display: flex; justify-content: space-between; gap: .5rem; font-size: .74rem; color: #46505c; padding: 2px 0; }
+.bk-line-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bk-via { color: #137a4d; font-size: .68rem; }
+.bk-exact { display: block; font-size: .68rem; color: #8b95a4; cursor: pointer; margin-top: 1px; }
+.bk-exact input { vertical-align: middle; margin-right: 3px; }
+.bk-unav { margin-top: .5rem; font-size: .72rem; color: #8b6b1f; background: #fcf6e3; border: 1px solid #efe2b8; border-radius: 6px; padding: .4rem .5rem; }
+#productModalBody { max-height: 70vh; overflow: auto; }
+/* Per-butik-pris-modal (Steg 6): prisnivåer grupperade på pris, klickbara -> butikslista fälls ut. */
+.sp-level { border-bottom: 1px solid #eef1f4; }
+.sp-level-head { display: flex; align-items: center; gap: .4rem; padding: 6px 2px; cursor: pointer; flex-wrap: wrap; }
+.sp-level-head:hover { background: #f6f8fa; }
+.sp-level-stores { padding: 2px 6px 8px 6px; line-height: 1.5; }
+.sp-caret { font-size: .7rem; }
+
+/* Kartfilter-banner: flytande chip överst på kartan (visar aktiv produktfiltrering). */
+#productFilterBar {
+  position: absolute; top: 10px; left: 50%; transform: translateX(-50%); z-index: 1000;
+  display: flex; align-items: center; gap: .5rem; max-width: 90vw;
+  background: #1f2a37; color: #fff; padding: 6px 10px 6px 14px; border-radius: 20px;
+  font-size: .8rem; box-shadow: 0 2px 8px rgba(0,0,0,.25);
+}
+#productFilterBar.d-none { display: none; }
+#productFilterClear {
+  background: rgba(255,255,255,.2); border: none; color: #fff; cursor: pointer;
+  width: 20px; height: 20px; border-radius: 50%; line-height: 1; font-size: 1rem;
+}
+#productFilterClear:hover { background: rgba(255,255,255,.35); }
+
+/* Jämförelsekort */
+.cmp-card { flex-direction: column; gap: .4rem; }
+.cmp-top { display: flex; gap: .55rem; align-items: flex-start; }
+.cmp-id { flex: 1; min-width: 0; }
+.cmp-spread {
+  flex: 0 0 auto; align-self: flex-start;
+  font-size: .66rem; font-weight: 700; white-space: nowrap;
+  background: #e7f7ef; color: #137a4d; padding: 2px 7px; border-radius: 20px;
+}
+.cmp-rows { display: flex; flex-direction: column; gap: 3px; }
+.cmp-row {
+  display: grid;
+  grid-template-columns: 12px auto 1fr auto;
+  align-items: center;
+  gap: .4rem;
+  padding: .3rem .4rem;
+  border-radius: 6px;
+  background: #f4f6f8;
+}
+.cmp-row.cmp-best { background: #e7f7ef; box-shadow: inset 2px 0 0 #19c37d; }
+.cmp-chain { font-weight: 600; font-size: .78rem; color: #1c2530; }
+.cmp-big { font-weight: 800; font-size: .82rem; color: #1c2530; text-align: right; }
+.cmp-row.cmp-best .cmp-big { color: #137a4d; }
+.cmp-sub { grid-column: 2 / -1; font-size: .68rem; color: #8b95a4; }
+/* Grupperad rad (flera butiker med samma deal): kompakt butikslista under rubriken */
+.cmp-row--grp { align-items: start; }
+.cmp-stores { grid-column: 2 / -1; margin-top: 2px; display: flex; flex-direction: column; gap: 1px; }
+.cmp-store { font-size: .68rem; color: #46505c; }
+.cmp-variants {
+  font-size: .62rem; font-weight: 700; background: #eef1f4; color: #46505c;
+  padding: 0 5px; border-radius: 4px; cursor: help;
+}
+
+/* Mobil: sidopanelen blir en overlay som glider in, kartan tar hela skärmen */
+@media (max-width: 640px) {
+  .nav-toggle { display: block; }
+  .header-sub { display: none; }
+  .sidebar {
+    position: absolute;
+    top: 0; bottom: 0; left: 0;
+    width: 88%;
+    max-width: 340px;
+    flex: none;
+    transform: translateX(-100%);
+    transition: transform .22s ease;
+    z-index: 1200;
+    box-shadow: 3px 0 18px rgba(0, 0, 0, .3);
+  }
+  body.nav-open .sidebar { transform: none; }
+  #map { width: 100%; }
+  /* Mörk bakgrund bakom panelen */
+  .nav-backdrop {
+    display: none;
+    position: absolute; inset: 0; z-index: 1100;
+    background: rgba(0, 0, 0, .35);
+  }
+  body.nav-open .nav-backdrop { display: block; }
+}
+
+/* ---- Bläddra-vy (alternativ till kartan): kategori-navigering + produktrutnät ---- */
+#browseView { flex: 1 1 auto; min-width: 0; overflow-y: auto; background: #f4f6f8;
+  padding: .9rem 1.1rem 2rem; }
+body.browse-mode .sidebar { display: none; }
+.browse-head { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; max-width: 1000px; margin: 0 auto .8rem; }
+.browse-head #browseSearch { flex: 1 1 220px; min-width: 200px; }
+.browse-head select { flex: 0 0 auto; }
+.browse-cats { display: flex; flex-wrap: wrap; gap: .35rem; justify-content: center;
+  max-width: 900px; margin: 0 auto .5rem; }
+.browse-summary { max-width: 900px; margin: 0 auto .9rem; text-align: center; }
+.browse-summary-chains { display: inline-flex; flex-wrap: wrap; gap: .3rem; justify-content: center;
+  vertical-align: middle; margin-left: .5rem; }
+.browse-cat-n { opacity: .6; font-weight: 600; margin-left: 2px; }
+.browse-cat.on .browse-cat-n { opacity: .85; }
+.browse-cat { font-size: .76rem; padding: 3px 11px; border-radius: 16px; cursor: pointer;
+  background: #fff; border: 1px solid #dfe4ea; color: #46505c; user-select: none; }
+.browse-cat:hover { background: #eef1f4; }
+.browse-cat.on { background: #19c37d; border-color: #19c37d; color: #04231a; font-weight: 700; }
+/* Kost-chips (tvärgående filter) - avvikande grön-tonad bas så de skiljer sig från kanoniska kategorier. */
+.browse-diet { background: #f0fbf4; border-color: #b9e6cc; color: #1c7a4d; font-weight: 600; }
+.browse-diet:hover { background: #e3f6ea; }
+.browse-diet.on { background: #0f9d58; border-color: #0f9d58; color: #fff; font-weight: 700; }
+.browse-title { max-width: 1200px; margin: 0 auto .5rem; font-weight: 700; color: #1c2530; }
+.browse-grid { max-width: 1560px; margin: 0 auto;
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(490px, 1fr)); gap: .6rem; }
+.browse-grid .offer-card { background: #fff; border: 1px solid #e6e9ec; border-radius: 9px; padding: .55rem .65rem;
+  overflow: hidden;  /* sista utväg: klipp ev. spill (lång rea+ISO-datum) i stället för utanför kortet */
+  animation: cardFadeIn .3s ease both; }  /* `both` -> osynlig under animation-delay = staggad infällning */
+/* Prisgridet får krympa inom kortet (annars trycker max-content-kolumnerna ut texten utanför) */
+.browse-grid .o-shelf { min-width: 0; }
+.browse-grid .o-shelf > span { min-width: 0; }
+@keyframes cardFadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .browse-grid .offer-card { animation: none; } }
+/* Produktbilden tonas in när den laddats (onload -> .loaded). Bara i rutnätet; div-platshållaren
+   (.o-img--ph) är inte en <img> och påverkas ej. */
+.browse-grid img.o-img { opacity: 0; transition: opacity .35s ease; }
+.browse-grid img.o-img.loaded { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .browse-grid img.o-img { opacity: 1; transition: none; } }
+/* I rutnätet: håll meta på en rad (ellipsis) så korten blir jämna; sidopanelens listkort
+   får fortsatt wrappa (butiksnamn m.m. ska synas där). */
+.browse-grid .o-meta { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#browseMore { max-width: 1200px; margin: 1rem auto; }
+.browse-progress { font-size: .8rem; color: #8b95a4; padding: .3rem 0; }
+.browse-progress span { font-weight: 600; color: #46505c; }
+
+/* ---- Geo-first zon-browse: väljare i sidopanelen (#zoneStart + #zonePicker) + zon-info ---- */
+/* Väljaren är inline i sidopanelen; bara nålen + radie-cirkeln ritas på kartan (Leaflet-lager). */
+.zone-picker { background: #f6f8fa; border: 1px solid #e1e6ea; border-radius: 8px; padding: .55rem .6rem; }
+/* Zon-info i bläddra-vyn */
+.zone-bar { max-width: 900px; margin: 0 auto .6rem; text-align: center; }
+.zone-bar-row { display: inline-flex; flex-wrap: wrap; align-items: center; gap: .4rem;
+  background: #f0fbf4; border: 1px solid #b9e6cc; border-radius: 18px; padding: .25rem .85rem;
+  font-size: .82rem; color: #1c7a4d; }
+/* I zon-läget gäller inte kedje-/erbjudande-/favorit-filtren (zonen spänner över kedjor) -> göm dem */
+.zone-browse #browseChain, .zone-browse #browseDeal,
+.zone-browse .browse-head label { display: none; }
